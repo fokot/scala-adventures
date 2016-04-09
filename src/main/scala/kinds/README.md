@@ -1,0 +1,1 @@
+`Values` are to `types` as `types` are to `kinds`

@@ -1,0 +1,3 @@
+#Scala adventures
+
+Me playing with Scala ...
