@@ -1,5 +1,14 @@
 //package kinds
 //
+//
+//val map: HOMap[Option, List] = HOMap[Option, List](
+//  Some("foo") -> List("foo", "bar", "baz"),
+//  Some(42) -> List(1, 1, 2, 3, 5, 8),
+//  Some(true) -> List(true, false, true, true))
+//// blissful type safety!
+//val xs: List[String] = map(Some("foo"))
+//// ditto!
+//val ys: List[Int] = map(Some(42))
 //class Connected[K, V, A]() {
 //
 //}
