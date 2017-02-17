@@ -1,12 +1,12 @@
-package freemonads
+package freemonads.cats
 
 import cats.free.Free
-import cats.~>
 import cats.instances.all._
+import cats.~>
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 sealed trait External[A]
 case class Tickets(count: Int) extends AnyVal
