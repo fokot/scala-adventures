@@ -1,9 +1,8 @@
 package freemonads.own
 
-import freemonads.own.console.{ReadLine, WriteLine}
-
 import scala.io.{Source, StdIn}
 
+/** Idea is taken this blof post http://degoes.net/articles/easy-monads */
 object consoleProgram extends App {
 
   import freemonad._
