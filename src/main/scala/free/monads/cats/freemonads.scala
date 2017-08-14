@@ -1,4 +1,4 @@
-package freemonads.cats
+package free.monads.cats
 
 import cats.free.Free
 import cats.instances.all._

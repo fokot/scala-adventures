@@ -1,4 +1,4 @@
-package freemonads.own
+package free.monads.own
 
 import scala.io.{Source, StdIn}
 
@@ -89,6 +89,10 @@ object freemonad {
   final case class IsRight[F[_], G[_], A](right: G[A]) extends EitherOr[F, G, A]
 
 
+//  type Inject f g = forall a. PrismP (f a) (g a)
+//  type Interpreter f g' = forall a g. Inject g g' -> f a -> Free g a
+
+
   class EitherOrInterpreter[F[_] : Interpreter, G[_] : Interpreter] extends Interpreter[({ type x[A] = EitherOr[F, G, A] })#x]{
     def interpret[A](effect: EitherOr[F, G, A]): A = effect match  {
       case IsLeft(effect) => implicitly[Interpreter[F]].interpret(effect)
@@ -100,6 +104,25 @@ object freemonad {
   implicit def eitherOrInterpreter[F[_] : Interpreter, G[_] : Interpreter]: Interpreter[({ type x[A] = EitherOr[F, G, A] })#x] =
     new EitherOrInterpreter[F, G]()
 
+}
+
+object prism {
+  case class PPrism[S, T, A, B](getOrModify: S => T Either A, reverseGet: B => T)
+  type Prism[S, A] = PPrism[S, S, A, A]
+
+  sealed trait IntOr[A]
+  case class IsA[A](a: A) extends IntOr[A]
+  case class IsInt[A](n: Int) extends IntOr[A]
+
+  def prismIsA[A, B]: PPrism[IntOr[A], IntOr[B], A, B] =
+    PPrism(
+      (s: IntOr[A]) =>
+        s match {
+          case IsA(a) => Right(a)
+          case IsInt(n) => Left(IsInt(n))
+        }
+      , IsA(_)
+    )
 }
 
 object console {
