@@ -1,10 +1,7 @@
 package shapeless
 
-import shapeless.TwoClassesToList.recordSum.at
-import shapeless.Update.at
 import shapeless._
 import shapeless.labelled.{FieldType, field}
-import shapeless.ops.hlist
 import shapeless.ops.hlist.{Align, ToTraversable, ZipWith}
 
 object TwoClassesToList {
