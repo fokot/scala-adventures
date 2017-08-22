@@ -7,7 +7,7 @@ import shapeless.ops.hlist.{Align, ToTraversable, ZipWith}
 object TwoClassesToList {
 
   // HLIST
-  def hlistZipArgsToList[A, B, P <: Poly2, ARepr <: HList, BRepr <: HList, R <: HList, X <: HList, M <: Poly]
+  def hlistZipArgsToList[A, B, P <: Poly2, ARepr <: HList, BRepr <: HList, R <: HList]
   (a: A, b: B, f: P)(
      implicit
      aGen : Generic.Aux[A, ARepr],
@@ -23,7 +23,7 @@ object TwoClassesToList {
   }
 
   // RECORD
-  def recordZipArgsToList[A, B, P <: Poly2, ARepr <: HList, BRepr <: HList, R <: HList, X <: HList, M <: Poly]
+  def recordZipArgsToList[A, B, P <: Poly2, ARepr <: HList, BRepr <: HList, R <: HList]
   (a: A, b: B, f: P)(
      implicit
      aGen : LabelledGeneric.Aux[A, ARepr],
