@@ -16,7 +16,7 @@ implicit val jsonDouble = new Json[Double]{
     def toJson(a: Double) = JSNumber(a)
 }
 ```
-* dependent type classes
+* **dependent type classes**
 ```scala
 //implicit def jsonOption[A](implicit jsonA: Json[A]) =
 // this is the same as
@@ -27,7 +27,12 @@ implicit def jsonOption[A: Json] =
     }
 ```
 
-* it can also depend on different type class
+* it can also **depend** on **different type class**
+```scala
+// we can automatically have type class InputType for type A
+// if we have Json type class for it 
+implicit def jsonOption[A: Json] = new InputType[A]{ ... }
+```
 
 * **instance pattern** - creates type class instances
 ```scala
