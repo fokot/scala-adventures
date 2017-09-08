@@ -1,3 +1,3 @@
-#Scala adventures
+# Scala adventures
 
 Me playing with Scala ...
