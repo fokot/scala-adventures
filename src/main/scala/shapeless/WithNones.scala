@@ -32,3 +32,18 @@ object WithNones {
 
   def createWithAllNones[A] = new WithNones[A]
 }
+
+object WithNonesTest extends App {
+  import WithNones._
+
+  case class A()
+  case class B(notAOption: Int)
+  case class C(b: Option[Int])
+  case class D(b: Option[Int], a: Option[A])
+
+  println(createWithAllNones[A]())
+  // will not compile
+  // println(createWithAllNones[B])
+  println(createWithAllNones[C]())
+  println(createWithAllNones[D]())
+}
