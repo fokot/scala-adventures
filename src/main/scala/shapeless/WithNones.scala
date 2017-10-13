@@ -32,7 +32,7 @@ object WithNones {
     * println(createWithAllNones[D]())
     */
 
-  def createWithAllNones[A] = new WithNones[A]
+  def createWithNones[A] = new WithNones[A]
 }
 
 object WithNonesTest extends App {
@@ -43,9 +43,9 @@ object WithNonesTest extends App {
   case class C(b: Option[Int])
   case class D(b: Option[Int], a: Option[A])
 
-  println(createWithAllNones[A]())
+  println(createWithNones[A]())
   // will not compile
   // println(createWithAllNones[B])
-  println(createWithAllNones[C]())
-  println(createWithAllNones[D]())
+  println(createWithNones[C]())
+  println(createWithNones[D]())
 }
