@@ -18,6 +18,8 @@ object WithNones {
     *
     * Usage:
     *
+    * import WithNones._
+    *
     * case class A()
     * case class B(notAOption: Int)
     * case class C(b: Option[Int])
