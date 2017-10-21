@@ -2,7 +2,9 @@
 
 * **type class** - pattern to extend classes
 * **type class** = trait with type parameter + implicit implementations as type class instances
-* resolved (all instances are known) in **compile time **
+* resolved (all instances are known) in **compile time**
+* in the example is `Json` type class with instances for `String` and `Double`
+* usually type class instances are in **instances** package e.g. `import cats.instances._`
 ```scala
 trait Json[A] {
     def toJson(a: A): JSModel
@@ -61,7 +63,8 @@ implicit def jsonOption[A: Json] =
 ```
 
 ## ops pattern
-* make type class look like methods on object
+* implicit conversion to make type class look like methods on object
+* usually implicit conversions are in **syntax** package e.g. `import cats.syntax.all._`
 ```scala
 object Json {
     implicit class Ops[A : Json](a: A) {
