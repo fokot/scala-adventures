@@ -64,7 +64,7 @@ implicit def jsonOption[A: Json] =
 
 ## ops pattern
 * implicit conversion to make type class look like methods on object
-* usually implicit conversions are in **syntax** package e.g. `import cats.syntax.all._`
+* usually implicit conversions are in **syntax** package e.g. `import cats.syntax.all._` or `import cats.syntax.option._` to be able to use `.some` and `import cats.syntax.either._` to be able to use `.asLeft` and `.asRight`
 ```scala
 object Json {
     implicit class Ops[A : Json](a: A) {
