@@ -17,7 +17,7 @@ object Empty {
   implicit def emptyOption[A] = instance[Option[A]](None)
   implicit val emptyHList = HNil
 
-  implicit def addEmptyToHList[A: Empty, H <: HList](implicit h: H): A :: H = null.asInstanceOf[A] :: h
+  implicit def addEmptyToHList[A: Empty, H <: HList](implicit h: H): A :: H = Empty[A].empty :: h
   // FIXME remove this
   implicit def addEmptyIntToHList[H <: HList](implicit h: H): Int :: H = Empty[Int].empty :: h
   implicit def emptyCaseClass[A, H <: HList](implicit gen: Generic.Aux[A, H], h: H) = instance[A](gen.from(h))
