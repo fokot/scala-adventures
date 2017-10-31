@@ -24,12 +24,12 @@ you do not need to give them unique names.
 
 * It is ugly to write
 ```scala
-val user = User("vlejd", 23)
+val user = User("vlejd", 22)
 println(JsonWriter.write(implicitly[Json[User]].json(user)))
 ```
 Put apply method to `Json` companion object to be able to do
 ```scala
-val user = User("vlejd", 23)
+val user = User("vlejd", 22)
 println(JsonWriter.write(Json[User].json(user)))
 ```
 
@@ -44,12 +44,12 @@ println(JsonWriter.write(user))
 
 * It is ugly to write
 ```scala
-val user = User("vlejd", 23)
+val user = User("vlejd", 22)
 println(JsonWriter.write(user))
 ```
 Make implicit conversion to be able to write. Put it to `Json` companion object and call it `Ops`
 ```scala
-val user = User("vlejd", 23)
+val user = User("vlejd", 22)
 println(user.toJson)
 ```
 
@@ -76,7 +76,7 @@ This should be `def` not a `val` like before because values in scala are not pol
 // 
 // now you implement only int type class and you are able to serialise Options  
 implicit val intJson = Json.instance[Int](a => JsonNumber(a))
-println(JsonWriter.write(Some(123)))
+println(JsonWriter.write(Some(122)))
 
 // it is easy also to change User serialising that age is optional
 // you make only change in User case class and everything works. If you made more changes somewhere you have a problem
