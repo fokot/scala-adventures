@@ -1,8 +1,11 @@
 # Type classes workshop
 
 * Watch this [video](https://www.youtube.com/watch?v=sVMES4RZF-8) to learn about type classes
-* Write `json AST` and `JsonWriter` which takes json and serialises it to string
+
+* Write json AST and `JsonWriter` which takes json and serialises it to `String`
+
 * Write json type class for `String` and case `class User(firstName: String, age: Int)` and serialise it
+
 * Scala syntax note
 ```scala
 def write[A: Json](a: A) = ...
@@ -11,11 +14,14 @@ def write[A](a: A)(implicit: Json[A]) = ...
 ```
 Scala allows only one implicit method parameter list. And it has to be the last one.
 It can be the first one in case method has only one parameter list.
-If there are two type classes with the same type you get an error `ambiguous implicit values`
+
+If there are two type classes with the same type you get an `ambiguous implicit values` error.
 They also can be passed explicitly which will resolve this issue. But it is generally bad idea to have two type classes
 for the same type in a project.
+
 The best idea is to put type class to companion object as this is always in scope when you import type and
 you do not need to give them unique names.
+
 * It is ugly to write
 ```scala
 val user = User("vlejd", 23)
@@ -26,6 +32,7 @@ Put apply method to `Json` companion object to be able to do
 val user = User("vlejd", 23)
 println(JsonWriter.write(Json[User].json(user)))
 ```
+
 * It is ugly to write
 ```scala
 println(JsonWriter.write(implicitly[Json[User]].json(user)))
@@ -34,6 +41,7 @@ Create another write method on `JsonWriter` which will take anything that can be
 ```scala
 println(JsonWriter.write(user))
 ```
+
 * It is ugly to write
 ```scala
 val user = User("vlejd", 23)
@@ -44,7 +52,9 @@ Make implicit conversion to be able to write. Put it to `Json` companion object 
 val user = User("vlejd", 23)
 println(user.toJson)
 ```
+
 * Change also serialising of user fields to user this new `.toJson` method
+
 * It is ugly to write
 ```scala
 implicit val stringJson = new Json[String] {
@@ -57,6 +67,7 @@ implicit val stringJson = Json.instance[String](a => JsonString(a))
 // or
 implicit val stringJson = Json.instance((a: String) => JsonString(a)) 
 ```
+
 * Now you can convert many types to json but what if type is in a `Option` on in a `List`?
 Write `Json` type class for anything which has `Json` type class and is wrapped in `Option` and another when it is wrapped in `List`.
 This should be `def` not a `val` like before because values in scala are not polymorphic (they do not take type parameters)
@@ -71,12 +82,14 @@ println(JsonWriter.write(Some(123)))
 // you make only change in User case class and everything works. If you made more changes somewhere you have a problem
 class User(firstName: String, age: Option[Int])
 ```
+
 * Type classes are resolved in compile time and are taken from the scope where the code implicitly needs them.
 Write stringReverseJson type class and make `User` to accept this type class for `Json[String]` from the scope
 where you serialise it
 ```scala
 implicit val stringReverseJson = Json.instance[String](a => JsonString(a.reverse)) 
 ```
+
 * Bonus task: Do implicit type class for every case class with help of `shapeless.LabelledGeneric`
 ```scala
 class User(firstName: String, age: Option[Int])
