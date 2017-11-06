@@ -13,14 +13,16 @@ object Empty {
   }
 
   implicit val emptyInt = instance[Int](1)
-  implicit val emptyString = instance[String]("")
-  implicit def emptyOption[A] = instance[Option[A]](None)
-  implicit val emptyHList = HNil
 
-  implicit def addEmptyToHList[A: Empty, H <: HList](implicit h: H): A :: H = Empty[A].empty :: h
-  // FIXME remove this
-  implicit def addEmptyIntToHList[H <: HList](implicit h: H): Int :: H = Empty[Int].empty :: h
-  implicit def emptyCaseClass[A, H <: HList](implicit gen: Generic.Aux[A, H], h: H) = instance[A](gen.from(h))
+  implicit val emptyString = instance[String]("")
+
+  implicit def emptyOption[A] = instance[Option[A]](None)
+
+  implicit val emptyHNil = instance[HNil](HNil)
+
+  implicit def emptyHCons[A: Empty, H <: HList : Empty] = instance[A :: H](Empty[A].empty :: Empty[H].empty)
+
+  implicit def emptyCaseClass[A, H <: HList](implicit gen: Generic.Aux[A, H], eh: Empty[H]) = instance[A](gen.from(eh.empty))
 
   def createEmpty[A: Empty] = Empty[A].empty
 }
@@ -37,7 +39,7 @@ object EmptyTest extends App {
   println(createEmpty[A])
   println(createEmpty[Int])
   println(createEmpty[B])
-//  println(createEmpty[C])
-//  println(createEmpty[D]())
-//  println(createEmpty[E]())
+  println(createEmpty[C])
+  println(createEmpty[D])
+  println(createEmpty[E])
 }
