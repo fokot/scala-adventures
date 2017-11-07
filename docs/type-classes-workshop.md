@@ -18,15 +18,13 @@ object JsonNull extends JsonValue
 
 object JsonWriter {
   def write(jsonValue: JsonValue): String = {
-    jsonValue match {
-      case JsonObject(entries) => ???
-      case JsonList(entries) => ???
-      case JsonString(value) => ???
-      case JsonInt(value) => ???
-      case JsonFloat(value) => ???
-      case JsonBoolean(value) => ???
-      case JsonNull => ???
-   }
+    case JsonObject(entries) => ???
+    case JsonList(entries) => ???
+    case JsonString(value) => ???
+    case JsonInt(value) => ???
+    case JsonFloat(value) => ???
+    case JsonBoolean(value) => ???
+    case JsonNull => ???
   }
 }
 
