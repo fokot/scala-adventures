@@ -3,6 +3,34 @@
 * Watch this [video](https://www.youtube.com/watch?v=sVMES4RZF-8) to learn about type classes
 
 * Write json AST and `JsonWriter` which takes json and serialises it to `String`
+Replace `???` with code
+
+```scala
+sealed trait JsonValue
+case class JsonObject(entries: Map[String, JsonValue]) extends JsonValue
+case class JsonList(entries: Seq[JsonValue]) extends JsonValue
+case class JsonString(value: String) extends JsonValue
+case class JsonInt(value: Int) extends JsonValue
+case class JsonFloat(value: Float) extends JsonValue
+case class JsonBoolean(value: Boolean) extends JsonValue
+object JsonNull extends JsonValue
+
+
+object JsonWriter {
+  def write(jsonValue: JsonValue): String = {
+    jsonValue match {
+      case JsonObject(entries) => ???
+      case JsonList(entries) => ???
+      case JsonString(value) => ???
+      case JsonInt(value) => ???
+      case JsonFloat(value) => ???
+      case JsonBoolean(value) => ???
+      case JsonNull => ???
+   }
+  }
+}
+
+```
 
 * Write json type class for `String` and case `class User(firstName: String, age: Int)` and serialise it
 
