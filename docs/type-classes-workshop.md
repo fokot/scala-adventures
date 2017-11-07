@@ -17,7 +17,7 @@ object JsonNull extends JsonValue
 
 
 object JsonWriter {
-  def write(jsonValue: JsonValue): String = {
+  def write(jsonValue: JsonValue): String = jsonValue match {
     case JsonObject(entries) => ???
     case JsonList(entries) => ???
     case JsonString(value) => ???
