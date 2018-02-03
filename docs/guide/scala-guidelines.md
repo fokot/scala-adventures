@@ -1,5 +1,7 @@
 # Scala guidelines
 
+# FIXME add OptionT
+
 ## Basics
 
 1. If you are not more comfortable and faster coding in `Scala` than in `Java`, `Javascript` or `Python` you are doing it wrong. Study. Types should help you not make you struggle. And also learn how to use your IDE.
@@ -367,6 +369,23 @@ TasksTable
 
 ### Empty `for-comprehension`
 
+Use `for-comprehension` only if you have multiple values packed ion the same box (`Option`, `Future`, `Task` etc.) and they depen on each other
+
+shitty code:
+```scala
+def createTaskWithData(task: Task, now: OffsetDateTime, taskData: Json): Future[Task] =
+  runTransactionally(
+    for {
+      task <- SlickDAO.createTaskWithData(task, now, taskData)
+    } yield task
+  )
+```
+
+better code:
+```scala
+def createTaskWithData(task: Task, now: OffsetDateTime, taskData: Json): Future[Task] =
+  runTransactionally(SlickDAO.createTaskWithData(task, now, taskData))
+```
 
 ### `Applicative` instead of `for-comprehension`
 When values do not depend on each other only the result `Applicative` is better than `for-comprehension` because it is weaker
