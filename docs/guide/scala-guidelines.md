@@ -518,11 +518,24 @@ def getResolvedCustomersCount(userId: ID)(implicit ec: ExecutionContext): DBIO[I
 }
 ```
 
-better code
+better code:
 ```scala
 def getResolvedCustomersCount(userId: ID)(implicit ec: ExecutionContext): DBIO[Int] =
   CustomerTable
     .filter(t => t.userId === userId && t.actionTakenId.isDefined)
     .length
     .result
+```
+
+### Never `return`
+More on that [here](https://tpolecat.github.io/2014/05/09/return.html)
+
+shitty code:
+```scala
+def plusOne(i: Int): Int = return i + 1 
+```
+
+better code:
+```scala
+def plusOne(i: Int): Int = i + 1 
 ```
