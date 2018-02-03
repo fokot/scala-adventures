@@ -249,7 +249,9 @@ Also do not use `onComplete` for serious tasks.
 
 shitty code (`updateSourceScreeningStatuses` will not run in the same transaction as `executeCustomerOfScreening` even though it is inner method of it)
 
-!(future_1.png)
+
+![future_1](future_1.png)
+
 
 ### Do not use `Future[Future[A]]`
 This type is not what you really want
