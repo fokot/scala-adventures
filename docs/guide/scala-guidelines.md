@@ -331,6 +331,35 @@ private def createUserGroups(userGroups: Seq[UserGroup]): DBIO[Seq[UserGroup]] =
     if (user.isDefined) uamExecutor.execute(
       uamDao.getUserPrimaryGroup(user.get.id)
     ) else None
+    
+### Never `DBIO.flatMap(_ => ???)`
+Prefer `DBIO` methods which do not take `ExecutionContext`. Methods like `andThen`, `andFinally`, `seq` or `sequence` are batched on db thread so it is faster and also type signatures and you do not need to have implicit in scope.  
+
+shitty code:
+```scala
+TasksTable
+  .filter(condition)
+  .map(_.kycRiskTopics)
+  .update(kycRiskTopics)
+  .flatMap(_ =>
+      TasksTable
+        .filter(condition)
+        .result
+        .headOption
+  )    
+```
+
+better code:
+```scala
+TasksTable
+  .filter(condition)
+  .map(_.kycRiskTopics)
+  .update(kycRiskTopics) andThen
+    TasksTable
+    .filter(condition)
+    .result
+    .headOption    
+```
 
 
 
