@@ -2,7 +2,7 @@
 
 ## Basics
 
-1. If you are not more comfortable and faster coding in `Scala` than in `Java`, `Javascript` or `Python` you are doing it wrong. Study. Types should help you not make you struggle. And also learn hwo to use your IDE.
+1. If you are not more comfortable and faster coding in `Scala` than in `Java`, `Javascript` or `Python` you are doing it wrong. Study. Types should help you not make you struggle. And also learn how to use your IDE.
 
 2. Have as much logic as possible in pure functions. Do all side effect as early as possible or wait with then as long as possible and have heart of your code pure. Single impure function in mostly pure function poisons it all. There are three ways how to battle side effects (from most to the least obvious):
 * pass value calculated by side effect to pure function
