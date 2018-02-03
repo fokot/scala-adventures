@@ -99,7 +99,7 @@ def searchServerStatusToNmsStatus(status: Map[String, String]): NmsStatus = {
 }
 ```
 
-### Separate pure function (function working with plain data)
+### Separate pure functions (functions working with plain data)
 
 shitty code (data conversion bundled with sending them):
 ```scala
