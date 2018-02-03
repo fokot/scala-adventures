@@ -181,7 +181,7 @@ def aToB(a: A): Option[B] = ???
 val b: Option[B] = a.flatmap(aToB)
 ```
 
-### Use `Option.map` not `if`
+### No `Option.isDefined` check
 
 shitty code:
 ```scala
@@ -195,6 +195,16 @@ better code:
 ```scala
 val getUserPrimaryGroup: Option[User] => Option[UserGroup] = (user) =>
   user.map(u => uamDao.getUserPrimaryGroup(u.id))
+```
+
+shitty code:
+```scala
+if (opt.isDefined) println(opt.get)
+```
+
+better code:
+```scala
+opt foreach println
 ```
 
 ### `Option` like `Iterable`
