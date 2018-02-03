@@ -1,7 +1,5 @@
 # Scala guidelines
 
-# FIXME add OptionT
-
 ## Basics
 
 1. If you are not more comfortable and faster coding in `Scala` than in `Java`, `Javascript` or `Python` you are doing it wrong. Study. Types should help you not make you struggle. And also learn how to use your IDE.
@@ -149,6 +147,19 @@ def getTaskDataForTask(taskId: ID, dataType: DataType): DBIO[Seq[TaskData]] =
       .result
 ```
 
+### Do not code things twice build upon existing functions
+
+better code (postRequestAndParse working with `Json` is more general so we can build upon it and create function working with classes)
+```scala
+def postRequestAndParse[Request: Encoder, Response: Decoder: ClassTag](req: Request, url: String): Future[Response] =
+  postRequestAndParse(req.asJson, url).flatMap(_.as[Response].fold(
+    _ => Future.failed(new Exception(s"Error parsing response from $url to ${Utils.className[Response]}.\nResponse: $a")),
+    Future.successful
+  ))
+
+def postRequestAndParse(req: Json, url: String): Future[Json] = ???
+```
+
 ## Option
 
 ### No `.getOrElse(None)`
@@ -197,6 +208,19 @@ Option(1) ++ Option(2) ++  None ++ Option(3)
 List(1) ++ Option(2) ++  None ++ Option(3)
 // gives you List(1, 2, 3)
 ```  
+### OptionT
+Do you need to combine `Option` fast circuit with functions returning `Futures`? Use OptionT then. It works like Option but it wraps `Future[Option[A]]` or other monad
+
+```scala
+(for {
+  data <- OptionT.fromOption[Future](ctx.value.data)
+  task <- OptionT.liftF(ctx.ctx.adService.getTask(ctx.value.taskId))
+  customerId <- OptionT.fromOption[Future](task.flatMap(_.customerId))
+  customer <- OptionT.liftF(ctx.ctx.kycService.getCustomer(customerId))
+} yield {
+  parseData(customer.get.entityTypeId, ctx.value.dataTypeId, data)
+}).value
+``` 
 
 ## Future
 
@@ -314,7 +338,7 @@ _ <- b.optionalValue.traverse(doC)
 } yield a
 ```
 
-## Slick
+## [Slick 3](http://slick.lightbend.com)
 
 ### Use `DBIO.sequence`
 shitty code:
@@ -416,6 +440,9 @@ implicit val jwtPayloadDecoder: Decoder[JWTPayload] = Decoder.instance(c =>
   )
 ```
 
+## [Sangria](http://sangria-graphql.org)
+
+
 ## Misc
 
 ### Prefer `map`/`flatMap` to `fold`/`reduce` if possible
@@ -456,4 +483,36 @@ object SortDirection {
   implicit val decoder: Decoder[SortDirection] = enumDecoder
   implicit val encoder: Encoder[SortDirection] = enumEncoder
 }
+```
+
+### Do not use blocks (if not necessary)
+
+Blocks can lead to errors as it is executed once and it's result is last statement. Also if you forget to include `DBIO` in the result of a block it will never be executed.
+
+Block is not a [function](http://daily-scala.blogspot.sk/2010/05/return-value-of-block.html).
+
+```scala
+var count = 0                                                                                                                   
+val l = List(1,2,3,4).map{count += 1;_ + 1}
+// l is List(2, 3, 4, 5)
+// count is still 1
+```
+
+shitty code:
+```scala
+def getResolvedCustomersCount(userId: ID)(implicit ec: ExecutionContext): DBIO[Int] = {
+  CustomerTable
+    .filter(t => t.userId === userId && t.actionTakenId.isDefined)
+    .length
+    .result
+}
+```
+
+better code
+```scala
+def getResolvedCustomersCount(userId: ID)(implicit ec: ExecutionContext): DBIO[Int] =
+  CustomerTable
+    .filter(t => t.userId === userId && t.actionTakenId.isDefined)
+    .length
+    .result
 ```
