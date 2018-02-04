@@ -20,11 +20,11 @@ There is popular `law of falling shit` in management.
 
 ![birds](birds.jpg)
 
-This also holds for SW development. If the overall architecture is not set right or not there at all, you can't easily fix it by writing nicer code. E.g. microservice architecture where services calls each other instead of having service bus. All of them needs to handle failover or store messages until they can send them to receiving service. The code in application itself can be nice but this is unnecessary complexity. Another such thing is not having aggregated logs or common monitoring over the whole platform. To fix architecture problems you will probably need to touch many if not all applications and it will take a lot of resources. I worked on plaform where the application itself were shitty but we hand nice lambda architecture and centralised logging and monitoring and working with it was fine and we knew what is happening in the platform.
+This also holds for SW development. If the overall architecture is not set right or not there at all, you can't easily fix it by writing nicer code. E.g. microservice architecture where services calls each other instead of having service bus. All of them needs to handle failover or store messages until they can send them to receiving service. The code in application itself can be nice but this is unnecessary complexity. Another such thing is not having aggregated logs or common monitoring over the whole platform. To fix architecture problems you will probably need to touch many if not all applications and it will take a lot of resources usually weeks or even months. I worked on platform where the application itself were shitty but we hand nice lambda architecture and centralised logging and monitoring and working with it was fine and we knew what is happening in the platform.
 
 ![levels_shit_1](levels_shit_1.jpg)
 
-Second level of shit is architecture of single application. If you need to fix it you will probably touych many modules/classes/methods/functions. But you touch just single app so it is easier to fix than platform architecture bug.
+Second level of shit is architecture of single application. If you need to fix it you will probably touch many modules/classes/methods/functions. But you touch just single app so it is easier to fix than platform architecture bug usually you fix this in matter of days or weeks.
 
 ![levels_shit_2](levels_shit_2.jpg)
 
