@@ -34,5 +34,5 @@ Easiest and the least important is the code itself. It is easier to fix than app
 
 ### How to fix them
 1) Discuss and confront overall architecture and deployments. Should be company wide initiative
-2) Should be solved per app. There are some general guidelines which can be shared between projects tough
-3) The code principles can also be shared. Probably except how to use the of libraries as product engineering team team for sure use different libs than system engineering or machine learning team. level 3) can be attacked in code reviews. also level 2) can be attacked in code reviews but first it has to be written somewhere
+2) Should be solved per app. There are some general guidelines which can be shared between projects tough. If code adhers to principles can be checked at code review but solely code reviews are not enough for this level. Sometime the right answer would be not to implment feature at all or implement different one so this one will not be needed. 
+3) This is the only one that can be fixed by solely code reviews. The code principles can also be shared. Probably except how to use the of libraries as product engineering team team for sure use different libs than system engineering or machine learning team. level 3) can be attacked in code reviews. also level 2) can be attacked in code reviews but first it has to be written somewhere
