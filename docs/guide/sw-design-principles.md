@@ -12,7 +12,7 @@ There are three levels of tech debt. If you fix higher level it has way bigger i
 
 ![levels](levels.jpg)
 
-1) highest level is overall platform architecture (how the apps communicate, how they are deployed, how to do logging/monitorig etc.)
+1) highest level is overall platform architecture - applications responsibilities, inter application communication, deployement,  aggregated logging/monitoring etc.
 2) middle level is architecture of a single app - layers of app, if we use streams or actors and what are our policies to use them, programming language, libraries etc.
 3) and the lowest level is actual code in new features (which is still important but has the least effect)
 
