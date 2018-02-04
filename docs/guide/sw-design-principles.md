@@ -8,9 +8,13 @@
 
 There are three levels of tech debt. If you fix higher level it has way bigger impact than fixing the lower.
 
-### Levels of tech debt
-
 ![levels](levels.jpg)
+
+*Arrow = influences
+* overall architecture influences design specific of applications
+* design of specific application influences design of its components
+
+### Levels of tech debt
 
 1) highest level is overall platform architecture - applications responsibilities, inter application communication, deployement,  aggregated logging/monitoring etc.
 2) middle level is architecture of a single app - layers of app, if we use streams or actors and what are our policies to use them, programming language, libraries etc.
