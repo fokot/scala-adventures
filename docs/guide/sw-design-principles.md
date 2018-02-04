@@ -8,7 +8,7 @@
 
 There are three levels of tech debt. If you fix higher level it has way bigger impact than fixing the lower.
 
-### Levels of tech debt:
+### Levels of tech debt
 
 ![levels](levels.jpg)
 
@@ -32,7 +32,7 @@ Easiest and the least important is the code itself. It is easier to fix than app
 
 ![levels_shit_3](levels_shit_3.jpg)  
 
-How to fix them:
+### How to fix them
 1) Discuss and confront overall architecture and deployments. Should be company wide initiative
 2) Should be solved per app. There are some general guidelines which can be shared between projects tough
 3) The code principles can also be shared. Probably except how to use the of libraries as product engineering team team for sure use different libs than system engineering or machine learning team. level 3) can be attacked in code reviews. also level 2) can be attacked in code reviews but first it has to be written somewhere
