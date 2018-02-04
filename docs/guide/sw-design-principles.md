@@ -10,7 +10,7 @@ There are three levels of tech debt. If you fix higher level it has way bigger i
 
 ![levels](levels.jpg)
 
-*Arrow = influences
+Arrow = influences
 * overall architecture influences design specific of applications
 * design of specific application influences design of its components
 
