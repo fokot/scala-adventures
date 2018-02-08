@@ -1,5 +1,17 @@
 # Scala guidelines
 
+Content:
+
+[Basics](#Basics)
+[Types](#Types)
+[Option](#Option)
+[For-comprehensions](#For-comprehensions)
+[Future](#Future)
+[Slick 3](#Slick-3)
+[Sangria](#Sangria)
+[Misc](#Misc)
+
+
 ## Basics
 
 1. If you are not more comfortable and faster coding in `Scala` than in `Java`, `Javascript` or `Python` you are doing it wrong. Study. Types should help you not make you struggle. And also learn how to use your IDE.
@@ -230,7 +242,83 @@ Do you need to combine `Option` fast circuit with functions returning `Futures`?
 } yield {
   parseData(customer.get.entityTypeId, ctx.value.dataTypeId, data)
 }).value
-``` 
+```
+
+## For-comprehensions
+
+`For-comprehension`s are translated to `map`, `flatMap` and `withFilter`. [Here](https://docs.scala-lang.org/tutorials/FAQ/yield.html) you can find more about them.
+
+This `for-comprehension`
+```scala
+for(x <- a; y <- b; z <- c) yield f(x, y, z)
+```
+is translated to
+```scala
+a.flatMap(x => b.flatMap(y => c.map(z => f(x, y, z))))
+```
+Types of `a`, `b`, `c` must have the same "wrapper" type e.g. `Future`, `DBIO`.
+Types of `x`, `y`, `z` are "unwrapped" type e.g. if `a` is `Future[String]`, `x` will be `String`.
+If you need to work with "unwrapped" types use `=` instead of `<-` e.g. `u = stringToUpper(a)`. 
+Result of `for-comprehension` has also the same "wrapper" type.
+
+If you do not want to write semicolons at the end use `{}` e.g.
+```scala
+for {
+  x <- a
+  y <- b
+  z <- c
+} yield f(x, y, z)
+```
+ 
+
+### Empty `for-comprehension`
+
+Use `for-comprehension` only if you have multiple values packed ion the same box (`Option`, `Future`, `Task` etc.) and they depen on each other
+
+shitty code:
+```scala
+def createTaskWithData(task: Task, now: OffsetDateTime, taskData: Json): Future[Task] =
+  runTransactionally(
+    for {
+      task <- SlickDAO.createTaskWithData(task, now, taskData)
+    } yield task
+  )
+```
+
+better code:
+```scala
+def createTaskWithData(task: Task, now: OffsetDateTime, taskData: Json): Future[Task] =
+  runTransactionally(SlickDAO.createTaskWithData(task, now, taskData))
+```
+
+### `Applicative` instead of `for-comprehension`
+When values do not depend on each other only the result `Applicative` is better than `for-comprehension` because it is weaker
+
+shitty code:
+```scala
+implicit val jwtPayloadDecoder: Decoder[JWTPayload] = Decoder.instance(c =>
+    for {
+      primaryGroup <- c.get[String]("primary-group")
+      groupMember <- c.get[List[String]]("group-member")
+      name <- c.get[String]("name")
+      pid <- c.get[String]("pid")
+    } yield JWTPayload(primaryGroup, groupMember, name, pid)
+  )
+```
+
+better code:
+```scala
+implicit val jwtPayloadDecoder: Decoder[JWTPayload] = Decoder.instance(c =>
+    (
+      c.get[String]("primary-group"),
+      c.get[List[String]]("group-member"),
+      c.get[String]("name"),
+      c.get[String]("pid")
+    ).map4(
+     JWTPayload
+    )
+  )
+```
 
 ## Future
 
@@ -395,59 +483,6 @@ TasksTable
     .filter(condition)
     .result
     .headOption    
-```
-
-
-
-## For-comprehensions
-
-### Empty `for-comprehension`
-
-Use `for-comprehension` only if you have multiple values packed ion the same box (`Option`, `Future`, `Task` etc.) and they depen on each other
-
-shitty code:
-```scala
-def createTaskWithData(task: Task, now: OffsetDateTime, taskData: Json): Future[Task] =
-  runTransactionally(
-    for {
-      task <- SlickDAO.createTaskWithData(task, now, taskData)
-    } yield task
-  )
-```
-
-better code:
-```scala
-def createTaskWithData(task: Task, now: OffsetDateTime, taskData: Json): Future[Task] =
-  runTransactionally(SlickDAO.createTaskWithData(task, now, taskData))
-```
-
-### `Applicative` instead of `for-comprehension`
-When values do not depend on each other only the result `Applicative` is better than `for-comprehension` because it is weaker
-
-shitty code:
-```scala
-implicit val jwtPayloadDecoder: Decoder[JWTPayload] = Decoder.instance(c =>
-    for {
-      primaryGroup <- c.get[String]("primary-group")
-      groupMember <- c.get[List[String]]("group-member")
-      name <- c.get[String]("name")
-      pid <- c.get[String]("pid")
-    } yield JWTPayload(primaryGroup, groupMember, name, pid)
-  )
-```
-
-better code:
-```scala
-implicit val jwtPayloadDecoder: Decoder[JWTPayload] = Decoder.instance(c =>
-    (
-      c.get[String]("primary-group"),
-      c.get[List[String]]("group-member"),
-      c.get[String]("name"),
-      c.get[String]("pid")
-    ).map4(
-     JWTPayload
-    )
-  )
 ```
 
 ## [Sangria](http://sangria-graphql.org)
