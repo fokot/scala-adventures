@@ -2,14 +2,14 @@
 
 Content:
 
-[Basics](#Basics)
-[Types](#Types)
-[Option](#Option)
-[For-comprehensions](#For-comprehensions)
-[Future](#Future)
-[Slick 3](#Slick-3)
-[Sangria](#Sangria)
-[Misc](#Misc)
+* [Basics](#Basics)
+* [Types](#Types)
+* [Option](#Option)
+* [For-comprehensions](#For-comprehensions)
+* [Future](#Future)
+* [Slick 3](#Slick-3)
+* [Sangria](#Sangria)
+* [Misc](#Misc)
 
 
 ## Basics
