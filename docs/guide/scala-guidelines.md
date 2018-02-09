@@ -581,8 +581,5 @@ If exception is clean you don't have to have stack trace
 
 better code:
 ```scala
-def taskByTargetId(targetId: ID)(implicit ec: ExecutionContext): DBIO[Task] =
-  TasksTable
-    .filter(_.targetId === targetId).result.headOption
-    .map(_.getOrElse(throw NodeNotFoundException(s"There is no task with target id $targetId") with NoStackTrace))
+throw new NodeNotFoundException(s"There is no task with target id $targetId") with NoStackTrace
 ```
