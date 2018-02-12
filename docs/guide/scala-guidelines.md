@@ -360,6 +360,30 @@ even better code without the `for-comprehension`
     customer.adBacklink.flatTraverse(updateDispositions(_, overview))
 ```
 
+### Too much `Future`s
+
+Do not wrap in `Future` just for sake wrapping it. When only one method returns Future use map on it instead of `flatMap` or `for-comprehension`
+
+shitty code:
+```scala
+def getDispositions(taskId: ID): Future[Option[OverviewSummary]] = {
+    for {
+      taskDataSeq <- getTaskDataForTask(taskId, DataType.UPDATE_DISPOSITIONS_REQUEST)
+      maybeHead <- Future.successful(taskDataSeq.headOption)
+      nmsResult <- Future.successful(maybeHead.flatMap(_.data).flatMap(_.as[OverviewSummary].toOption))
+      maybeRiskTopics <- Future.successful(nmsResult)
+    } yield (maybeRiskTopics)
+  }
+```
+
+better code:
+```scala
+def getDispositions(taskId: ID): Future[Option[OverviewSummary]] = {
+    getTaskDataForTask(taskId, DataType.UPDATE_DISPOSITIONS_REQUEST).map(
+      _.headOption.flatMap(_.data).flatMap(_.as[OverviewSummary].toOption)
+    )
+```
+
 ### Do not `Future[Unit]`
 Always return something from the `Future`. You might not find that it failed and it can type check even if there is a bug
 [https://lustforge.com/2016/04/12/future-unit-and-stupid-scala-tricks/]
