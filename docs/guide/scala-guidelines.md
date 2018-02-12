@@ -360,7 +360,7 @@ even better code without the `for-comprehension`
     customer.adBacklink.flatTraverse(updateDispositions(_, overview))
 ```
 
-### Too much `Future`s
+### Too many `Future`s
 
 Do not wrap in `Future` just for sake wrapping it. When only one method returns Future use map on it instead of `flatMap` or `for-comprehension`
 
