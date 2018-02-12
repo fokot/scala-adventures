@@ -378,7 +378,7 @@ def getDispositions(taskId: ID): Future[Option[OverviewSummary]] = {
 
 better code:
 ```scala
-def getDispositions(taskId: ID): Future[Option[OverviewSummary]] = {
+def getDispositions(taskId: ID): Future[Option[OverviewSummary]] =
     getTaskDataForTask(taskId, DataType.UPDATE_DISPOSITIONS_REQUEST).map(
       _.headOption.flatMap(_.data).flatMap(_.as[OverviewSummary].toOption)
     )
