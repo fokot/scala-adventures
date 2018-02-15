@@ -150,7 +150,7 @@ def getTaskDataForTask(taskId: ID, dataTypeId: ID): DBIO[Seq[TaskData]] =
         .result
 ```
 
-better code (look only dataType was changed as we have constants in code, to get task we would need to read it from db):
+better code (look only dataTypeId was changed to dataType as we have constants in code, to get task we would need to read it from db):
 ```scala
 def getTaskDataForTask(taskId: ID, dataType: DataType): DBIO[Seq[TaskData]] =
   TaskDataTable
