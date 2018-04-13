@@ -4,7 +4,7 @@ import shapeless.labelled.FieldType
 
 import scala.reflect.ClassTag
 
-case class Field(name: String, clazz: Class[_], isRequired: Boolean = true, isList: Boolean = false)
+case class Field(name: String, clazz: Class[_], isOption: Boolean = false, isList: Boolean = false)
 
 trait ToField[A] {
   def field: Field
@@ -28,9 +28,9 @@ object ToField extends LowToField {
     override def field = f
   }
 
-  implicit def fieldsOption[K, A](implicit fields: Lazy[ToField[FieldType[K, A]]]) = instance[FieldType[K, Option[A]]](fields.value.field.copy(isRequired = false))
+  implicit def fieldsOption[K, A](implicit fields: Lazy[ToField[FieldType[K, A]]]) = instance[FieldType[K, Option[A]]](fields.value.field.copy(isOption = true))
 
-  implicit def fieldsList[K, A](implicit fields: Lazy[ToField[FieldType[K, A]]]) = instance[FieldType[K, List[A]]](fields.value.field.copy(isList = false))
+  implicit def fieldsList[K, A](implicit fields: Lazy[ToField[FieldType[K, A]]]) = instance[FieldType[K, List[A]]](fields.value.field.copy(isList = true))
 
 }
 
