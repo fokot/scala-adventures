@@ -33,7 +33,7 @@ implicit def jsonOption[A: Json] =
 ```scala
 // we can automatically have type class Json for type A
 // if we have Enum type class for it 
-implicit def jsonOption[A: Enum] = new Json[A]{ ... }
+implicit def jsonEnum[A: Enum] = new Json[A]{ ... }
 ```
 
 ## instance pattern
