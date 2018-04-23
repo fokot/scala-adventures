@@ -31,9 +31,9 @@ implicit def jsonOption[A: Json] =
 
 ## it can also depend on different type class
 ```scala
-// we can automatically have type class InputType for type A
-// if we have Json type class for it 
-implicit def jsonOption[A: Json] = new InputType[A]{ ... }
+// we can automatically have type class Json for type A
+// if we have Enum type class for it 
+implicit def jsonOption[A: Enum] = new Json[A]{ ... }
 ```
 
 ## instance pattern
