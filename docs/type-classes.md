@@ -108,4 +108,7 @@ import scala.reflect.runtime.universe._
 
 println(reify(Json[Int]))
 //> Expr[AAA.Json[Int]](AAA.this.Json.apply[Int](AAA.this.intJson))
+
+println(showCode(reify(Json[Int]).tree))
+//> Expr[Json[Int]](Json[Int](intJson))
 ```
