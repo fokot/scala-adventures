@@ -8,10 +8,9 @@ Replace `???` with code
 ```scala
 sealed trait JsonValue
 case class JsonObject(entries: Map[String, JsonValue]) extends JsonValue
-case class JsonList(entries: Seq[JsonValue]) extends JsonValue
+case class JsonArray(entries: Seq[JsonValue]) extends JsonValue
 case class JsonString(value: String) extends JsonValue
-case class JsonInt(value: Int) extends JsonValue
-case class JsonFloat(value: Float) extends JsonValue
+case class JsonNumber(value: Double) extends JsonValue
 case class JsonBoolean(value: Boolean) extends JsonValue
 object JsonNull extends JsonValue
 
@@ -19,18 +18,16 @@ object JsonNull extends JsonValue
 object JsonWriter {
   def write(jsonValue: JsonValue): String = jsonValue match {
     case JsonObject(entries) => ???
-    case JsonList(entries) => ???
+    case JsonArray(entries) => ???
     case JsonString(value) => ???
-    case JsonInt(value) => ???
-    case JsonFloat(value) => ???
+    case JsonNumber(value) => ???
     case JsonBoolean(value) => ???
     case JsonNull => ???
   }
 }
-
 ```
 
-* Write json type class for `String` and case `class User(firstName: String, age: Int)` and serialise it
+* Write json type class and its instances for `String` and `case class User(firstName: String, age: Int)` and serialise them
 
 * Scala syntax note
 ```scala
@@ -51,17 +48,17 @@ you do not need to give them unique names.
 * It is ugly to write
 ```scala
 val user = User("vlejd", 22)
-println(JsonWriter.write(implicitly[Json[User]].json(user)))
+println(JsonWriter.write(implicitly[Json[User]].asJson(user)))
 ```
-Put apply method to `Json` companion object to be able to do
+Get rid of `implicitly` - put apply method to `Json` companion object to be able to do
 ```scala
 val user = User("vlejd", 22)
-println(JsonWriter.write(Json[User].json(user)))
+println(JsonWriter.write(Json[User].asJson(user)))
 ```
 
 * It is ugly to write
 ```scala
-println(JsonWriter.write(implicitly[Json[User]].json(user)))
+println(JsonWriter.write(Json[User].asJson(user)))
 ```
 Create another write method on `JsonWriter` which will take anything that can be converted to json and produces `String` 
 ```scala
@@ -76,15 +73,15 @@ println(JsonWriter.write(user))
 Make implicit conversion to be able to write. Put it to `Json` companion object and call it `Ops`
 ```scala
 val user = User("vlejd", 22)
-println(user.toJson)
+println(JsonWriter.write(user.asJson))
 ```
 
-* Change also serialising of user fields to user this new `.toJson` method
+* Change also serialising of user fields to user this new `.asJson` method
 
 * It is ugly to write
 ```scala
 implicit val stringJson = new Json[String] {
-  def json(a: String) = JsonString(a) 
+  def asJson(a: String) = JsonString(a) 
 }
 ```
 Make helper method to be able to write type class instances like. Put it to `Json` companion object and call it `instance`
@@ -94,7 +91,7 @@ implicit val stringJson = Json.instance[String](a => JsonString(a))
 implicit val stringJson = Json.instance((a: String) => JsonString(a)) 
 ```
 
-* Now you can convert many types to json but what if type is in a `Option` on in a `List`?
+* Now you can convert many types to json but what if type is not simple type but an `Option` or a `List`?
 Write `Json` type class for anything which has `Json` type class and is wrapped in `Option` and another when it is wrapped in `List`.
 This should be `def` not a `val` like before because values in scala are not polymorphic (they do not take type parameters)
 ```scala
@@ -104,8 +101,7 @@ This should be `def` not a `val` like before because values in scala are not pol
 implicit val intJson = Json.instance[Int](a => JsonNumber(a))
 println(JsonWriter.write(Some(122)))
 
-// it is easy also to change User serialising that age is optional
-// you make only change in User case class and everything works. If you made more changes somewhere you have a problem
+// if you make User.age optional (Option[Int]) everything should work
 class User(firstName: String, age: Option[Int])
 ```
 
@@ -116,7 +112,13 @@ where you serialise it
 implicit val stringReverseJson = Json.instance[String](a => JsonString(a.reverse)) 
 ```
 
-* Bonus task: Do implicit type class for every case class with help of `shapeless.LabelledGeneric`
+* Bonus task: Json type class which will catch all types without a type class and convert them to `JsonString("THIS IS NOT SERIALIZABLE")`. Look for `low priority implicits`
+
+* Bonus task: Make a vararg method which will accept list with anything which has Json type class. Is it even possible? Why not or why yes?
+
+* Bonus task: Use [simulacrum](https://github.com/mpilquist/simulacrum) library to reduce the type class boiler plate
+
+* Bonus task: Do implicit type class for every case class with help of `shapeless.LabelledGeneric`. To get the field name use ` implicit def xxx[K <: Symbol](implicit key: Witness.Aux[K])` 
 ```scala
 class User(firstName: String, age: Option[Int])
 

@@ -2,6 +2,7 @@
 
 * **type class** - pattern to extend classes
 * **type class** = trait with type parameter + implicit implementations as type class instances
+* implicits can be used for [many more things](http://www.lihaoyi.com/post/ImplicitDesignPatternsinScala.html) than type classes
 * resolved (all instances are known) in **compile time**
 * in the example is `Json` type class with instances for `String` and `Double`
 * usually type class instances are in **instances** package e.g. `import cats.instances._`
@@ -18,7 +19,7 @@ implicit val jsonDouble = new Json[Double]{
     def toJson(a: Double) = JSNumber(a)
 }
 ```
-## dependent type classes
+## Dependent type classes
 ```scala
 //implicit def jsonOption[A](implicit jsonA: Json[A]) =
 // this is the same as
@@ -36,7 +37,7 @@ implicit def jsonOption[A: Json] =
 implicit def jsonEnum[A: Enum] = new Json[A]{ ... }
 ```
 
-## instance pattern
+## Instance pattern
 * creates type class instances
 ```scala
 object Json {
@@ -49,7 +50,7 @@ object Json {
 implicit val intJson = Json.instance[Int](JSNumber(_))
 ```
 
-## summoner pattern
+## Summoner pattern
 * summons type class instance to scope
 ```scala
 object Json {
@@ -62,7 +63,7 @@ implicit def jsonOption[A: Json] =
     }
 ```
 
-## ops pattern
+## Ops pattern
 * implicit conversion to make type class look like methods on object
 * usually implicit conversions are in **syntax** package e.g. `import cats.syntax.all._` or `import cats.syntax.option._` to be able to use `.some` and `import cats.syntax.either._` to be able to use `.asLeft` and `.asRight`
 ```scala
@@ -80,7 +81,7 @@ Json[String].toJson("asdfasdf")
 1.toJson
 ```
 
-## companion object with instances pattern
+## Companion object with instances pattern
 * bring type class instances always to scope when importing object
 ```scala
 case class User(id: ID, firstName: String, lastName: String, active: Boolean)
@@ -91,6 +92,63 @@ object User {
 
 import User
 // now is also type class Json[User] in scope
+```
+
+## Aux pattern
+
+## Low priority instances
+
+* default instances for type classes are put to LowPriorityInstance trait so they do not collide with others and are taken only when some higher priority instance is not in scope
+
+```scala
+trait LowPriorityConverters {
+  implicit def defaultConverter[A] = Converter[A].instance(_ => "No converter written")   
+}
+
+object Converters extends LowPriorityConverters {
+
+  implicit val stringConverter = Converter[String].instance(_)  
+}
+
+import Converters._
+
+// implicits do not collide on String and stringConverter is taken
+"some string".convert
+1.convert
+```
+
+## Existentials
+
+* if you want to specify that you want a type with type class but you do not care about the actual type - e.g. you want to pass db statement creation function mulitple paramaters as a list and they all have to have SQLParam type class 
+* read more [here](https://www.cakesolutions.net/teamblogs/existential-types-in-scala)
+
+```scala
+// data TCBox tc = forall a. tc a => TCBox a
+sealed trait TCBox[TC[_]] {
+  type T
+  val value: T
+  val evidence: TC[T]
+}
+
+object TCBox {
+
+  private case class Aux[TC[_], A](value: A)(implicit val evidence: TC[A]) extends TCBox[TC] {
+    type T = A
+  }
+
+  def apply[TC[_], T: TC](value: T): TCBox[TC] = Aux(value)
+
+  /**
+    * Allows for case matching with evidence
+    */
+  def unapply[TC[_]](t: TCBox[TC]): Option[(t.T, TC[t.T])] =
+    Some(t.value -> t.evidence)
+
+  // If `A` implements the type class `TC`, then `A` can be wrapped by
+  // `TCBox[TC]` if it is expected. This allows for automatic lifting of
+  // types into TCBox.
+  implicit def anyToBox[TC[_], A: TC](v: A): TCBox[TC] = TCBox(v)
+}
 ```
 
 ## debugging type classes
@@ -112,3 +170,9 @@ println(reify(Json[Int]))
 println(showCode(reify(Json[Int]).tree))
 //> Expr[Json[Int]](Json[Int](intJson))
 ```
+
+## implicits in Intellij
+
+`Ctrl + q` - show implicit conversion
+`Shift + Cmd + p` - show implicit parameters
+![implicit_parameter.jpg](implicit_parameter.jpg)
