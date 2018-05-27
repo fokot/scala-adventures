@@ -94,8 +94,6 @@ import User
 // now is also type class Json[User] in scope
 ```
 
-## Aux pattern
-
 ## Low priority instances
 
 * default instances for type classes are put to LowPriorityInstance trait so they do not collide with others and are taken only when some higher priority instance is not in scope
@@ -115,6 +113,33 @@ import Converters._
 // implicits do not collide on String and stringConverter is taken
 "some string".convert
 1.convert
+```
+
+## Aux pattern
+// TODO
+
+## InstanceOf pattern
+instanceOf type classes scalaz 8 https://www.slideshare.net/jdegoes/scalaz-8-a-whole-new-game
+// TODO
+
+## MTL style / finally tagless
+
+* instead of writing monad transformers (data types), write type class parametrised with `F[_]` to extract the effect
+* here we have `MonadState` type class, monad transformer `StateT` implements as well as other data types can.
+
+```scala
+trait MonadState[F[_], S] extends Monad[F] { self =>
+  def get: F[S]
+  def put(s: S): F[Unit]
+}
+
+def runApp[F[_]](implicit F: MonadState[F, AppState]): F[Unit] =
+  for {
+    state <- F.get
+    ...
+    _ <- F.put(state.copy(...))
+    ...
+  } yield ()
 ```
 
 ## Existentials
