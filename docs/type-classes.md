@@ -124,8 +124,8 @@ instanceOf type classes scalaz 8 https://www.slideshare.net/jdegoes/scalaz-8-a-w
 
 ## MTL style / finally tagless
 
-* instead of writing monad transformers (data types), write type class parametrised with `F[_]` to extract the effect
-* here we have `MonadState` type class, monad transformer `StateT` implements as well as other data types can.
+* instead of writing monad transformers (data types), write type class parametrised with `F[_]` to extract the effect. It is not just more [flexible but also faster](http://degoes.net/articles/effects-without-transformers).
+* here we have `MonadState` type class, monad transformer `StateT` implements as well as other data types can
 
 ```scala
 trait MonadState[F[_], S] extends Monad[F] { self =>
