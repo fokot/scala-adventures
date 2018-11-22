@@ -1,7 +1,5 @@
 package fpmax
 
-import fpmax.AppIO.{IO, getStrLn, putStrLn}
-
 import scala.io.StdIn.readLine
 import scala.util.Try
 
