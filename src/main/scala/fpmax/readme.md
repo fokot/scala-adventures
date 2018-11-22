@@ -5,6 +5,7 @@ Taken from FP to the max by John De Goes
 [code](https://gist.github.com/jdegoes/1b43f43e2d1e845201de853815ab3cb9)
 
 * `App0` - imperative
+* `AppMethods` - imperative version with logic split to methods
 * `AppIO` - IO monad only, we didn't get anything
 * `App1` - tagless final
 * `App2` - moved part to stdlib

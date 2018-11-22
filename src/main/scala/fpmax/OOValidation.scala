@@ -27,13 +27,13 @@ trait Rule[A, B] {
 object OOValidation extends App {
 
   class NonEmpty(name: String) extends Rule[Map[String, String], String] {
-    override def test(input: Map[String, String]): Boolean = ???
+    override def test(input: Map[String, String]): Either[String, String] = ???
 
     override def message: String = ???
   }
 
   class IsNumber(n: String) extends Rule[String, Int] {
-    override def test(input: Map[String, String]): Boolean = ???
+    override def test(input: String): Either[String, Int] = ???
 
     override def message: String = ???
   }

@@ -59,7 +59,6 @@ object AppIO {
 
 
   def main(args: Array[String]): Unit = {
-    println("ioioioi")
     mainIO.unsafeRun()
   }
 }
