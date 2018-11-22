@@ -166,4 +166,20 @@ object App1 {
   def main(args: Array[String]): Unit = {
     mainIO.unsafeRun()
   }
+
+
+
+  val TestExampleCheckContinue =
+    TestData(
+      input  = "x" :: "y" :: "n" :: Nil,
+      output = Nil,
+      nums   = 0 :: Nil
+    )
+  def runTestCheckContinue: String = checkContinue[TestIO]("franta").eval(TestExampleCheckContinue).showResults
+
+//  def main(args: Array[String]): Unit = {
+//    println(
+//      runTestCheckContinue
+//    )
+//  }
 }
