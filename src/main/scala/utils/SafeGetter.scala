@@ -3,6 +3,9 @@ package utils
 import cats.implicits._
 import cats.data.Kleisli
 
+/**
+  * From talk https://www.youtube.com/watch?v=zFPEuI8i9Ds
+  */
 object SafeGetter  {
 
   type SafeGetter[A, B] = Kleisli[Option, A, B]
