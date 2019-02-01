@@ -42,7 +42,7 @@ implicit def jsonEnum[A: Enum] = new Json[A]{ ... }
 ```scala
 object Json {
     def instance[A](f: A => JSModel) =
-        new Json[Option[A]]{
+        new Json[A]{
           def toJson(a: A) = f(a)
         }
 }
