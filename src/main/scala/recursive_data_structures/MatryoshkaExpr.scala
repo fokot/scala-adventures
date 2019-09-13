@@ -1,3 +1,6 @@
+// matryoshka not yet in scala 2.13 :(
+
+/*
 package recursive_data_structures
 
 import matryoshka.{ Recursive, Corecursive }
@@ -20,7 +23,7 @@ object MatryoshkaExpr extends App {
     case Mult(x1, x2) => x1 * x2
     case Num (x)      => x
   }
-  
+
   def expr[T](implicit T: Corecursive.Aux[T, Expr]): T =
     Add(
       Mult(
@@ -33,3 +36,5 @@ object MatryoshkaExpr extends App {
   println(exprRes)  // 11
 
 }
+
+ */
