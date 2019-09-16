@@ -1,5 +1,7 @@
 package implicitConversions
 
+import scala.language.postfixOps
+
 object ImplicitsMain {
 
   implicit  def intToPimpedInt(i : Int) = new PimpedInt(i)

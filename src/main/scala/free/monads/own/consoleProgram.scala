@@ -9,7 +9,7 @@ object consoleProgram extends App {
   import console._
   import http._
 
-  // othwerwise implicit interpreter is not found
+  // otherwise implicit interpreter is not found
   console.interpreter
   http.interpreter
 

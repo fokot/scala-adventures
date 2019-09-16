@@ -13,28 +13,43 @@ type IO[+E, +A] = ZIO[Any, E, A]
 object GraphQL {
 
   trait GEnvironment[A] {
-    value: A
+    def value: A
   }
 
-  case class GObject[A, Env <: GEnvironment[A], E](
-    name: String,
-    fields: List[GField[A, Env, E, Any]]
-  )
+  trait GType[A] {
+    def name: String
+  }
 
-  // field in parent object A or type B
+  case class GObject[A, Env[_], E](
+    name: String,
+    fields: List[GField[A, Env, E, Any]],
+  ) extends GType[A]
+
+  case class GPrimitive[A](
+    name: String,
+  ) extends GType[A]
+
+  object GInt extends GPrimitive[Int]("Int")
+
+  case class ListType[A](
+    `type`: GType[A]
+  ) extends GType[List[A]] {
+    override def name: String = s"List of ${`type`.name}"
+  }
+
+  // field in parent object A and returns type B
   case class GField[A, Env[_], E, +B](
     name: String,
-    resolver: ZIO[Env[A], E, B]
-//    or this ?
-//    resolver: Env[A] => ZIO[Env[A], E, B]
+    `type`: GType[B],
+    resolver: ZIO[Env[A], E, B],
   )
 }
 
 object Domain {
 
-  case class User(id: Long)
+  case class User(id: Int)
 
-  case class Booking(id: Long)
+  case class Booking(id: Int)
 }
 
 object BookingGraphQL {
@@ -54,13 +69,34 @@ object BookingGraphQL {
 
   type AllServices[A] = UserService with BookingService with GEnvironment[A]
 
-//  val root = GObject[Nothing, AllServices[Nothing], Throwable](
-//    "root",
-//    List(
-//      GField(
-//        "users",
-//        ZIO(null).accessM
-//      )
-//    )
-//  )
+  val userType = GObject[User, AllServices, Throwable](
+    "User",
+    List(
+      GField[User, AllServices, Throwable, Int](
+        "id",
+        GInt,
+//        ZIO.accessM(r => ZIO(r.value.id))
+        ZIO.access(_.value.id)
+      ),
+    )
+  )
+
+  val rootType = GObject[Nothing, AllServices, Throwable](
+  "root",
+  List(
+    GField[Nothing, AllServices, Throwable, List[User]](
+      "users",
+      ListType(userType),
+      ZIO.accessM(_.allUsers)
+    ),
+    GField[Nothing, AllServices, Throwable, Int](
+      "bookingCount",
+      GInt,
+      ZIO.access(_.bookingCount)
+    ),
+    )
+  )
+
+
+
 }

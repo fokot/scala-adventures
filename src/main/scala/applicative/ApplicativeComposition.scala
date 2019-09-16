@@ -1,5 +1,7 @@
 package applicative
 
+import scala.language.postfixOps
+
 import cats.data.ReaderT
 import cats.instances.all._
 import cats.{Applicative, Id}

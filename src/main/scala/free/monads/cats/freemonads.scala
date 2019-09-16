@@ -1,5 +1,7 @@
 package free.monads.cats
 
+import scala.language.postfixOps
+
 import cats.free.Free
 import cats.instances.all._
 import cats.~>
