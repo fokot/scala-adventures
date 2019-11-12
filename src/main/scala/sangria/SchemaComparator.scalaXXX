@@ -1,0 +1,58 @@
+package com.merlonintelligence.clientapi.common
+
+import cats.syntax.option._
+import cats.syntax.either._
+import io.circe.{ Encoder, _ }
+import io.circe.generic.semiauto._
+import io.circe.parser.parse
+import sangria.marshalling.circe.CirceInputUnmarshaller
+import sangria.schema.{ Schema, SchemaChange }
+
+import scala.util.Try
+import scalaj.http.{ Http => SJHttp }
+
+object SchemaComparator {
+
+  val introspectionQuery =
+    s"""{"query":"${sangria.introspection.introspectionQuery.source.get.lines.mkString("  ")}"}"""
+
+  type ParsedSchema = Either[String, Schema[_, _]]
+
+  def downloadAndParseSchema(url: String): ParsedSchema =
+    Try(
+      Schema.buildFromIntrospection(
+        parse(
+          SJHttp(url)
+            .postData(introspectionQuery)
+            .header("content-type", "application/json")
+            .asString
+            .body
+        ).right.get
+      )
+    ).toOption.toRight(s"Can't parse schema from $url")
+
+  case class ComparisonResult(error: Option[String], data: Vector[SchemaChange] = Vector.empty)
+
+  implicit val SchemaChangeEncoder: Encoder[SchemaChange] = new Encoder[SchemaChange] {
+    final def apply(c: SchemaChange): Json = Json.fromFields(
+      "breaking" -> Json.fromBoolean(c.breakingChange) :: "description" -> Json.fromString(c.description) :: Nil
+    )
+  }
+  implicit val ComparisonResultEncoder: Encoder[ComparisonResult] = deriveEncoder
+
+  def schemaCompare(schema: Schema[_, _], oldSchema: Option[String], newSchema: Option[String]): ComparisonResult =
+    (oldSchema, newSchema) match {
+      case (None, None) => ComparisonResult("No schema selected".some)
+      case (Some(o), None) => compare(downloadAndParseSchema(o), schema.asRight[String])
+      case (None, Some(n)) => compare(schema.asRight[String], downloadAndParseSchema(n))
+      case (Some(o), Some(n)) => compare(downloadAndParseSchema(o), downloadAndParseSchema(n))
+    }
+
+  def compare(oldSchema: ParsedSchema, newSchema: ParsedSchema): ComparisonResult = {
+    val res = for {
+      o <- oldSchema
+      n <- newSchema
+    } yield ComparisonResult(None, n compare o)
+    res.left.map(error => ComparisonResult(error.some)).merge
+  }
+}

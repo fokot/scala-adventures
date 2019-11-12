@@ -1,0 +1,160 @@
+package com.merlonintelligence.clientapi.common
+
+import java.time.Clock
+
+import cats.implicits._
+import com.typesafe.scalalogging.LazyLogging
+import enum.Enum
+import io.circe._
+import io.circe.derivation.{ deriveDecoder, deriveEncoder }
+import io.circe.derivation.renaming.kebabCase
+import io.circe.parser.parse
+import io.circe.syntax._
+import pdi.jwt._
+import pdi.jwt.algorithms.JwtHmacAlgorithm
+import pdi.jwt.exceptions.JwtExpirationException
+import pureconfig.module.enum.enumConfigConvert
+import pureconfig.{ ConfigReader, Derivation }
+
+import scala.concurrent.duration.{ Duration, FiniteDuration }
+import scala.util.{ Failure, Success, Try }
+
+object jwt extends LazyLogging {
+
+  final case class JWTCacheConf(maxTtl: FiniteDuration, maxSize: Long)
+
+  /*
+    From https://tools.ietf.org/html/rfc7519:
+      A JWT is represented as a sequence of URL-safe parts separated by
+      period ('.') characters. Each part contains a base64url-encoded
+      value. The number of parts in the JWT is dependent upon the
+      representation of the resulting JWS using the JWS Compact
+      Serialization or JWE using the JWE Compact Serialization.
+
+    From https://tools.ietf.org/html/rfc7515#section-3.1:
+      In the JWS Compact Serialization, a JWS is represented as the concatenation:
+
+      BASE64URL(UTF8(JWS Protected Header)) || '.' ||
+      BASE64URL(JWS Payload) || '.' ||
+      BASE64URL(JWS Signature)
+
+    From https://tools.ietf.org/html/rfc7516#page-8:
+      In the JWE Compact Serialization, a JWE is represented as the concatenation:
+
+      BASE64URL(UTF8(JWE Protected Header)) || '.' ||
+      BASE64URL(JWE Encrypted Key) || '.' ||
+      BASE64URL(JWE Initialization Vector) || '.' ||
+      BASE64URL(JWE Ciphertext) || '.' ||
+      BASE64URL(JWE Authentication Tag)
+   */
+  final case class JWTConf(
+    key: String,
+    algorithm: JwtHmacAlgorithm,
+    expiration: Duration,
+    sourceOfTruth: Boolean,
+    cache: Option[JWTCacheConf]
+  )
+
+  object JWTConf {
+    implicit val JwtHmacAlgorithmEnum: Enum[JwtHmacAlgorithm] = Enum.derived[JwtHmacAlgorithm]
+    implicit val configConverter = enumConfigConvert[JwtHmacAlgorithm]
+    import pureconfig.generic.auto._
+    val reader = Derivation.materializeDerivation[ConfigReader[JWTConf]]
+  }
+
+  final case class JWTPayload(
+    primaryGroup: String,
+    groupMember: List[String],
+    name: String,
+    pid: String,
+    orgCode: Option[String],
+    email: Option[String]
+  )
+
+  implicit val jwtPayloadDecoder: Decoder[JWTPayload] = deriveDecoder(kebabCase)
+  implicit val jwtPayloadEncoder: Encoder[JWTPayload] = deriveEncoder(kebabCase)
+
+  class JWT(val conf: JWTConf)(implicit val clock: Clock) {
+
+    def removeBearer(token: String): Try[String] =
+      if (token.startsWith("Bearer "))
+        Success(token.substring(7))
+      else
+        Failure(new IllegalArgumentException("Token does not start with 'Bearer '"))
+
+    def decodeTokenToClaim(token: String): Try[JwtClaim] =
+      JwtCirce.decode(token, conf.key, Seq(conf.algorithm)) match {
+        case Success(s) if s.isValid => // check validity according to available Clock instance
+          logger.debug(
+            s"token decoded: $token, issuedAt: ${s.issuedAt}, expiration: ${s.expiration}, key: ${conf.key}, algo: ${conf.algorithm}, conf: $conf"
+          )
+          Success(s)
+        case Success(s) =>
+          logger.error(
+            s"expired token decoded: $token, issuedAt: ${s.issuedAt}, expiration: ${s.expiration}, key: ${conf.key}, algo: ${conf.algorithm}, conf: $conf"
+          )
+          Failure(new JwtExpirationException(s.expiration.get))
+        case Failure(t) =>
+          logger.error(s"token cannot be decoded: $token, key: ${conf.key}, algo: ${conf.algorithm}, conf: $conf")
+          Failure(t)
+      }
+
+    def decodeTokenPayload(token: String): Try[JWTPayload] = {
+      logger.debug(s"token: $token")
+      removeBearer(token)
+        .flatMap(decodeTokenToClaim)
+        .flatMap(jwtClaim => parse(jwtClaim.content).toTry.logFailureAsWarn("parse content"))
+        .flatMap(json => json.as[JWTPayload].toTry.logFailureAsWarn("deserialize JWTPayload"))
+        .map { p =>
+          logger.debug(s"Got payload: $p"); p
+        }
+    }
+
+    /**
+      * From: https://tools.ietf.org/html/rfc7519#section-2
+      *
+      * NumericDate
+      *   A JSON numeric value representing the number of seconds from
+      *   1970-01-01T00:00:00Z UTC until the specified UTC date/time,
+      *   ignoring leap seconds.  This is equivalent to the IEEE Std 1003.1,
+      *   2013 Edition [POSIX.1] definition "Seconds Since the Epoch", in
+      *   which each day is accounted for by exactly 86400 seconds, other
+      *   than that non-integer values can be represented.  See RFC 3339
+      *   [RFC3339] for details regarding date/times in general and UTC in
+      *   particular.
+      *
+      * note:
+      *   * arguments are in milliseconds
+      *   * JWT uses seconds, NOT milliseconds
+      *
+      * @param issuedAtMillis   number of milliseconds since Epoch
+      * @param expirationMillis number of milliseconds since Epoch
+      * @param jwtPayload payload
+      * @return encoded token
+      */
+    def encodeToken(issuedAtMillis: Long, expirationMillis: Long, jwtPayload: JWTPayload): String = {
+      require(issuedAtMillis <= expirationMillis)
+      // convert arguments to seconds
+      JwtCirce.encode(
+        JwtClaim(
+          issuedAt = Some(issuedAtMillis / 1000),
+          expiration = Some(expirationMillis / 1000),
+          content = jwtPayload.asJson.noSpaces
+        ),
+        conf.key,
+        conf.algorithm
+      )
+    }
+
+    def encodeToken(jwtPayload: JWTPayload): String = {
+      val clockMillis = clock.instant().toEpochMilli
+      encodeToken(issuedAtMillis = clockMillis, expirationMillis = clockMillis + conf.expiration.toMillis, jwtPayload)
+    }
+
+  }
+
+  implicit class LoggableTry[T](t: Try[T]) {
+    def logFailureAsWarn(context: String): Try[T] = t.recoverWith { case th: Throwable => logger.warn(context, th); t }
+  }
+
+}

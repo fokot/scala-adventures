@@ -1,0 +1,109 @@
+package com.merlonintelligence.clientapi.common
+
+import akka.http.scaladsl.model.StatusCode
+import akka.http.scaladsl.model.StatusCodes.{ BadRequest, InternalServerError, OK, Unauthorized }
+import cats.data.EitherT
+import cats.syntax.either._
+import cats.instances.future._
+import com.merlonintelligence.clientapi.common.SangriaExecutor.GraphQLRequest
+import io.circe.Json
+import io.circe.optics.JsonPath.root
+import sangria.ast
+import sangria.execution.deferred.DeferredResolver
+import sangria.execution.{ ErrorWithResolver, Executor, Middleware, QueryAnalysisError }
+import sangria.marshalling.circe._
+import sangria.parser.QueryParser
+import sangria.schema.Schema
+import sangria.slowlog.SlowLog
+import CirceUtils.EMPTY_JSON
+import com.typesafe.scalalogging.StrictLogging
+
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.io.Source
+
+object SangriaExecutor {
+
+  case class GraphQLRequest(token: Option[String], profiler: Option[String], requestJson: Json)
+
+  type GraphQLResponse = (StatusCode, Json)
+
+  type GraphQLExecute = GraphQLRequest => Future[GraphQLResponse]
+
+  def skipComments(s: String): String =
+    Source
+      .fromString(s)
+      .getLines()
+      .toList
+      .filterNot(l => l.trim.startsWith("#"))
+      .mkString("\n")
+
+  def isUnauthorized(j: Json) = root.errors.each.code.int.getAll(j).exists(_ == 401)
+}
+
+class SangriaExecutor[Ctx](
+  schema: Schema[Ctx, Unit],
+  deferredResolver: DeferredResolver[Ctx],
+  middleware: List[Middleware[Ctx]],
+  createAppContext: (GraphQLRequest, Json) => Future[Ctx]
+) extends StrictLogging {
+
+  import SangriaExecutor._
+
+  def executeWithSchema(
+    queryAst: ast.Document,
+    context: Ctx,
+    operationName: Option[String],
+    variables: Json,
+    profiler: Option[String] = None
+  )(implicit ec: ExecutionContext): Future[Json] = {
+
+    val includeMetrics = profiler match {
+      case Some("slowlog") => SlowLog.extension :: SlowLog.apolloTracing :: Nil
+      case _ => Nil
+    }
+
+    val middle = middleware ++ includeMetrics
+
+    Executor.execute(
+      schema,
+      queryAst,
+      context,
+      (),
+      operationName,
+      variables,
+      exceptionHandler = ErrorHandler.handler,
+      middleware = middle,
+      deferredResolver = deferredResolver
+    )
+  }
+
+  def parseAndExecuteRequest(implicit ec: ExecutionContext): GraphQLExecute = req => {
+    val variables = root.variables.json.getOption(req.requestJson).filterNot(_.isNull).getOrElse(EMPTY_JSON)
+
+    (for {
+      appContext <- EitherT.liftF[Future, GraphQLResponse, Ctx](createAppContext(req, variables))
+      query <- EitherT.fromOption[Future](
+        root.query.string.getOption(req.requestJson).map(skipComments),
+        BadRequest -> Json.fromString("No query")
+      )
+      operationName = root.operationName.string.getOption(req.requestJson)
+      queryAst <- EitherT.fromEither[Future](
+        QueryParser
+          .parse(query)
+          .toEither
+          .leftMap(e => BadRequest -> Json.fromString(s"Can not parse query: ${e.getMessage}"))
+      )
+      result <- EitherT.liftF[Future, GraphQLResponse, GraphQLResponse](
+        executeWithSchema(queryAst, appContext, operationName, variables, req.profiler)
+          .map(j => (if (isUnauthorized(j)) Unauthorized else OK).asInstanceOf[StatusCode] -> j)
+          .recover {
+            case error: QueryAnalysisError => {
+              logger.error(s"""Query: "${operationName.getOrElse("")}" failed with error ${error.getMessage}""")
+              BadRequest -> error.resolveError
+            }
+            case error: ErrorWithResolver => InternalServerError -> error.resolveError
+          }
+      )
+    } yield result).merge
+  }
+}

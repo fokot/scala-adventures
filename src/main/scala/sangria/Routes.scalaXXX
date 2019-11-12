@@ -1,0 +1,70 @@
+package com.merlonintelligence.clientapi.root
+
+import akka.event.Logging
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers.RawHeader
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server._
+import com.merlonintelligence.BuildInfo
+import com.merlonintelligence.clientapi.access.graphql.AuthorizationException
+import com.merlonintelligence.clientapi.access.graphql.Schema.Schema
+import com.merlonintelligence.clientapi.access.rest.common.healthy
+import com.merlonintelligence.clientapi.common.SangriaExecutor.{ GraphQLExecute, GraphQLRequest }
+import com.merlonintelligence.clientapi.common.SchemaComparator
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
+import io.circe.Json
+
+class Routes(nns: GraphQLExecute) extends FailFastCirceSupport {
+
+  private val versionHeader = RawHeader("X-Api-Version", BuildInfo.commitHash)
+
+  val exceptionHandler = ExceptionHandler {
+    case _: AuthorizationException =>
+      complete(HttpResponse(StatusCodes.Unauthorized, entity = HttpEntity.Empty))
+  }
+
+  val login = path("login")(getFromResource("login.html"))
+
+  val version = path("version")(complete(HttpEntity(ContentTypes.`application/json`, BuildInfo.toJson)))
+
+  val graphiql = path("graphiql")(getFromResource("graphiql.html"))
+
+  val graphqlPlayground = path("graphql-playground")(getFromResource("graphql-playground.html"))
+
+  val schemaCompare = path("schemaCompare")(getFromResource("schemaCompare.html"))
+
+  val schemaCompareResult = path("schemaCompareResult")(
+    parameters('oldSchema.?, 'newSchema.?)(
+      (oldSchema, newSchema) =>
+        complete(SchemaComparator.schemaCompare(Schema, oldSchema.filter(_.nonEmpty), newSchema.filter(_.nonEmpty)))
+    )
+  )
+
+  val ready = path("ready")(complete(StatusCodes.OK))
+
+  val graphql =
+    path("graphql")(
+      handleExceptions(exceptionHandler)(
+        logRequest(("graphql", Logging.DebugLevel))(optionalHeaderValueByName("Authorization") { token =>
+          optionalHeaderValueByName("X-Profile-Query")(
+            profiler =>
+              respondWithDefaultHeader(versionHeader)(
+                entity(as[Json])(requestJson => complete(nns(GraphQLRequest(token, profiler, requestJson))))
+            )
+          )
+        })
+      )
+    )
+
+  val routes: Route =
+    post(graphql) ~ get(
+      Directives
+        .concat(graphiql, graphqlPlayground, healthy, ready, login, version, schemaCompare, schemaCompareResult)
+    )
+}
+
+object Routes {
+  private val nns: GraphQLExecute = ExecutorSupport.prepareExecutor
+
+  final def apply(): Route = new Routes(nns).routes
+}
