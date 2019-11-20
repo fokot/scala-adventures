@@ -88,7 +88,12 @@
 //      }
 //      // FIXME ExecutionContext
 //      gqlResult <- IO.fromFuture(
-//        IO.delay(executeWithSchema(queryAst, GQLContext(token), gqlRequest.operationName, variables)(ExecutionContext.global))
+//        IO.delay(executeWithSchema(queryAst, GQLContext(token), gqlRequest.operationName, variables)(ExecutionContext.global)      gqlResult <- IO.fromFuture(
+//        IO.delay(executeWithSchema(queryAst, GQLContext(token, storage), gqlRequest.operationName, variables)(ExecutionContext.global).recover {
+//          case error: QueryAnalysisError => {
+//            error.resolveError
+//          }
+//        }(ExecutionContext.global))
 //      )
 //      response <- if (isUnauthorized(gqlResult))
 //        IO(Response[IO](Status.Unauthorized, body = EntityEncoder[IO, Json].toEntity(gqlResult).body))
